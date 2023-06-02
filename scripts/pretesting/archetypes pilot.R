@@ -12,7 +12,9 @@ pckgs <- c(
   'ggcorrplot',
   'correlation',
   'FactoMineR',
-  'factoextra'
+  'factoextra',
+  'ggrepel',
+  'ggpubr'
   )
 
 load_and_install(package_list = pckgs)
@@ -86,7 +88,7 @@ traits <- c(
   'intelligence',
   'wisdom',
   'sociability',
-  'friendliensss',
+  'friendliness',
   'attractiveness',
   'motivating',
   'inspirational',
@@ -291,10 +293,10 @@ fact_anal_scatter(c1_efa)
 # rmsr: .1
 # tli: .496
 fa.diagram(c2_efa)
-fact_anal_scatter(
-  c2_efa$loadings[,c(1:2)],
-  c2_efa$loadings[,c(1,3)],
-  c2_efa$loadings[,c(2:3)]
+fact_anal_scatter(c2_efa
+  # c2_efa$loadings[,c(1:2)],
+  # c2_efa$loadings[,c(1,3)],
+  # c2_efa$loadings[,c(2:3)]
 )
 
 # primary loadings (f1):
@@ -320,6 +322,7 @@ fact_anal_scatter(
 # rmsr: .07
 # tli: .727
 fa.diagram(s1_efa)
+fact_anal_scatter(s1_efa)
 
 # primary loadings (f1):
 # trustworthy = .9
@@ -346,6 +349,7 @@ fa.diagram(s1_efa)
 # rmsr: .06
 # tli: .717
 fa.diagram(s2_efa)
+fact_anal_scatter(s2_efa)
 
 # primary loadings (f1):
 # profound = .8
@@ -522,7 +526,7 @@ socl_bsee[16:26,c('person_type', 'bullshit_type', 'trait', 'mean')]
 # inspirational
 
 
-
+# explore proposed reverse correlation ratings items
 rc_ratings_traits <- c(
   'trustworthiness',
   'attractiveness',
