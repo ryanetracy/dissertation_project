@@ -66,4 +66,4 @@ df_final %>%
   count() %>%
   mutate(n = n/300)
 
-write.csv(df_final, 'data files/image_gen_data.csv', row.names = F)
+# write.csv(df_final, 'data files/image_gen_data.csv', row.names = F)

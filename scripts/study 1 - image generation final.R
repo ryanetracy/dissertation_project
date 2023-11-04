@@ -4,6 +4,7 @@
 # ci creation
 ##############################
 
+library(xlsx)
 library(rcicr)
 library(tidyverse)
 
@@ -85,3 +86,49 @@ batchGenerateCI2IFC(as.data.frame(df),
                     rdata = rDat,
                     antiCI = T,
                     targetpath = 'cis/group_level/anti_cis')
+
+
+# make a table of all IDs for later use
+bullshitter_ids <- substr(
+  list.files(path = 'cis/bullshitter/true_cis'),
+  21, 28
+)
+
+bullshittee_ids <- substr(
+  list.files(path = 'cis/bullshittee/true_cis'),
+  21, 28
+)
+
+# bser_true_ids <- substr(
+#   list.files(path = 'cis/bullshitter/true_cis'),
+#   21, 28
+# )
+# 
+# bser_anti_ids <- substr(
+#   list.files(path = 'cis/bullshitter/anti_cis'),
+#   21, 28
+# )
+# 
+# bsee_true_ids <- substr(
+#   list.files(path = 'cis/bullshittee/true_cis'),
+#   21, 28
+# )
+# 
+# bsee_anti_ids <- substr(
+#   list.files(path = 'cis/bullshittee/anti_cis'),
+#   21, 28
+# )
+
+
+
+# grab participant ID values to tie to stims
+ids_df <- data.frame(
+  p_id = c(rep(bullshitter_ids, 2), rep(bullshittee_ids, 2)),
+  ci_id = paste0(
+    'stim', str_pad(1:196, width = 3, side = 'left', pad = '0')
+  ),
+  ci_group = rep(c('bullshitter', 'bullshittee'), each = 98),
+  image_type = rep(c('true_ci', 'anti_ci'), each = 49)
+)
+
+# write.xlsx(ids_df, 'participant ids.xlsx', row.names = F)
