@@ -99,27 +99,6 @@ bullshittee_ids <- substr(
   21, 28
 )
 
-# bser_true_ids <- substr(
-#   list.files(path = 'cis/bullshitter/true_cis'),
-#   21, 28
-# )
-# 
-# bser_anti_ids <- substr(
-#   list.files(path = 'cis/bullshitter/anti_cis'),
-#   21, 28
-# )
-# 
-# bsee_true_ids <- substr(
-#   list.files(path = 'cis/bullshittee/true_cis'),
-#   21, 28
-# )
-# 
-# bsee_anti_ids <- substr(
-#   list.files(path = 'cis/bullshittee/anti_cis'),
-#   21, 28
-# )
-
-
 
 # grab participant ID values to tie to stims
 ids_df <- data.frame(
