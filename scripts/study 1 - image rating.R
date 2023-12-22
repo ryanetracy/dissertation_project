@@ -6,29 +6,29 @@
 #################################
 
 
-url = https://github.com/ryanetracy/misc_functions/blob/main/misc_functions.R?raw=TRUE
+url = 'https://github.com/ryanetracy/misc_functions/blob/main/misc_functions.R?raw=TRUE'
 devtools::source_url(url)
 
 pckgs <- c(
-  psych,
-  afex,
-  lme4,
-  lmerTest,
-  effectsize,
-  parameters,
-  rstatix,
-  FactoMineR,
-  factoextra,
-  ggcorrplot,
-  tidyverse,
-  ggrepel
+  'psych',
+  'afex',
+  'lme4',
+  'lmerTest',
+  'effectsize',
+  'parameters',
+  'rstatix',
+  'FactoMineR',
+  'factoextra',
+  'ggcorrplot',
+  'tidyverse',
+  'ggrepel'
 )
 
 package_loader(pckgs)
 
 
 # read data
-df <- read.csv(data files/bullshitter_bullshittee_ratings.csv)
+df <- read.csv('data files/bullshitter_bullshittee_ratings.csv')
 
 colnames(df)
 
@@ -38,13 +38,13 @@ df %>% count(consent)
 df <- df %>% 
   filter(Progress >= 90) %>%
   filter(consent == 1) %>%
-  select(-contains(c(Date,
-                     Progress,
-                     Finished,
-                     consent,
-                     _DO,
-                     _TEXT,
-                     SC0)))
+  select(-contains(c('Date',
+                     'Progress',
+                     'Finished',
+                     'consent',
+                     '_DO',
+                     '_TEXT',
+                     'SC0')))
 
 total_n = nrow(df)
 
@@ -55,25 +55,25 @@ demos <- df %>%
 # someone wrote their name in the age response...
 demos %>%
   select(age) %>%
-  filter(age != Mairely Tineo) %>%
+  filter(age != 'Mairely Tineo') %>%
   mutate_at(.vars = age, .funs = as.numeric) %>%
-  get_summary_stats(age, type = mean_sd)
+  get_summary_stats(age, type = 'mean_sd')
 
 demos %>%
   group_by(race) %>%
   count() %>%
   mutate(
     race = case_when(
-      race == 1 ~ asian,
-      race == 2 ~ black,
-      race == 3 ~ latino,
-      race == 4 ~ native american,
-      race == 5 ~ middle eastern,
-      race == 6 ~ pacific islander,
-      race == 7 ~ white,
-      race == 8 ~ biracial,
-      race == 9 ~ not listed,
-      TRUE ~ no response
+      race == 1 ~ 'asian',
+      race == 2 ~ 'black',
+      race == 3 ~ 'latino',
+      race == 4 ~ 'native american',
+      race == 5 ~ 'middle eastern',
+      race == 6 ~ 'pacific islander',
+      race == 7 ~ 'white',
+      race == 8 ~ 'biracial',
+      race == 9 ~ 'not listed',
+      TRUE ~ 'no response'
     ),
     prop = n / total_n
   )
@@ -83,11 +83,11 @@ demos %>%
   count() %>%
   mutate(
     gender = case_when(
-      gender == 1 ~ male,
-      gender == 2 ~ female,
-      gender == 3 ~ non binary,
-      gender == 4 ~ other,
-      TRUE ~ no response
+      gender == 1 ~ 'male',
+      gender == 2 ~ 'female',
+      gender == 3 ~ 'non binary',
+      gender == 4 ~ 'other',
+      TRUE ~ 'no response'
     ),
     prop = n / total_n
   )
@@ -95,30 +95,30 @@ demos %>%
 
 
 # rename columns
-stim_nums <- str_pad(1:196, width = 3, side = left, pad = 0)
+stim_nums <- str_pad(1:196, width = 3, side = 'left', pad = 0)
 
 new_names <- paste0(
-  rep(stim),
+  rep('stim'),
   rep(stim_nums, each = 14),
-  rep(_),
-  rep(c(bullshitter, bullshittee), each = 1372),
-  rep(_),
-  rep(c(trueCI, antiCI), each = 686),
-  rep(c(_)),
-  rep(c(trustworthy,
-        attractive,
-        wise,
-        gullible,
-        dominant,
-        sociable,
-        ambitious,
-        deceptive,
-        narcissistic,
-        competent,
-        warm,
-        eurocentric,
-        masculine,
-        percage))
+  rep('_'),
+  rep(c('bullshitter', 'bullshittee'), each = 1372),
+  rep('_'),
+  rep(c('trueCI', 'antiCI'), each = 686),
+  rep(c('_')),
+  rep(c('trustworthy',
+        'attractive',
+        'wise',
+        'gullible',
+        'dominant',
+        'sociable',
+        'ambitious',
+        'deceptive',
+        'narcissistic',
+        'competent',
+        'warm',
+        'eurocentric',
+        'masculine',
+        'percage'))
 )
 
 names(df)[2:2745] <- new_names
@@ -129,15 +129,15 @@ df_long <- df %>%
   select(ResponseId:stim196_bullshittee_antiCI_percage) %>%
   pivot_longer(
     cols = stim001_bullshitter_trueCI_trustworthy:stim196_bullshittee_antiCI_percage,
-    names_to = c(stimID, ci_type, img_cat, trait),
-    names_sep = _,
-    values_to = rating
+    names_to = c('stimID', 'ci_type', 'img_cat', 'trait'),
+    names_sep = '_',
+    values_to = 'rating'
   ) %>%
   na.omit() %>%
-  pivot_wider(names_from = trait, values_from = rating) %>%
+  pivot_wider(names_from = 'trait', values_from = 'rating') %>%
   mutate(
-    type_c = if_else(ci_type == bullshittee, -1, 1),
-    cat_c = if_else(img_cat == antiCI, -1, 1)
+    type_c = if_else(ci_type == 'bullshittee', -1, 1),
+    cat_c = if_else(img_cat == 'antiCI', -1, 1)
   )
 
 
@@ -338,7 +338,7 @@ mod1 <- manova(cbind(trustworthy,
                      warm,
                      eurocentric,
                      masculine) ~ ci_type * img_cat, data = df_stims)
-summary(mod1, Wilks)
+summary(mod1, 'Wilks')
 summary.aov(mod1)
 
 # interactions with:
@@ -385,7 +385,7 @@ group_means <- df_stims %>%
                     warm,
                     eurocentric,
                     masculine,
-                    percage, type = mean_sd)
+                    percage, type = 'mean_sd')
 
 # group_means %>% print(n = 60)
 
@@ -393,14 +393,14 @@ cond_labs <- data.frame(trait = unique(group_means$variable))
 
 # get trait values per ci group and image type
 bser_true <- group_means %>% 
-  filter(ci_type == bullshitter & img_cat == trueCI)
+  filter(ci_type == 'bullshitter' & img_cat == 'trueCI')
 bser_anti <- group_means %>% 
-  filter(ci_type == bullshitter & img_cat == antiCI)
+  filter(ci_type == 'bullshitter' & img_cat == 'antiCI')
 
 bsee_true <- group_means %>% 
-  filter(ci_type == bullshittee & img_cat == trueCI)
+  filter(ci_type == 'bullshittee' & img_cat == 'trueCI')
 bsee_anti <- group_means %>% 
-  filter(ci_type == bullshittee & img_cat == antiCI)
+  filter(ci_type == 'bullshittee' & img_cat == 'antiCI')
 
 # bullshitter true vs. anti cis
 bullshitter_d_vals <- cbind(
@@ -536,10 +536,10 @@ plot_means <- df_stims %>%
                     warm,
                     eurocentric,
                     masculine,
-                    type = mean_ci)
+                    type = 'mean_ci')
 
-facet_labs <- c(Bullshittees, Bullshitters)
-names(facet_labs) <- c(bullshittee, bullshitter)
+facet_labs <- c('Bullshittees', 'Bullshitters')
+names(facet_labs) <- c('bullshittee', 'bullshitter')
 
 plot_means %>%
   ggplot(aes(variable, mean, color = img_cat)) +
@@ -547,96 +547,96 @@ plot_means %>%
              size = 5,
              alpha = .75) +
   geom_errorbar(aes(ymin = mean - ci, ymax = mean + ci)) +
-  scale_color_manual(values = c(#034694, #dba111),
-                     labels = c(Anti-CIs, True-CIs)) +
+  scale_color_manual(values = c('#034694', '#dba111'),
+                     labels = c('Anti-CIs', 'True-CIs')) +
                      # labels = c(Bullshittee CIs, Bullshitter CIs)) +
   scale_x_discrete(labels = str_to_title(
     c(
-      trustworthy,
-      attractive,
-      wise,
-      gullible,
-      dominant,
-      sociable,
-      ambitious,
-      deceptive,
-      narcissistic,
-      competent,
-      warm,
-      eurocentric,
-      masculine
+      'trustworthy',
+      'attractive',
+      'wise',
+      'gullible',
+      'dominant',
+      'sociable',
+      'ambitious',
+      'deceptive',
+      'narcissistic',
+      'competent',
+      'warm',
+      'eurocentric',
+      'masculine'
     )
   )) +
   theme_light() +
   facet_wrap(~ ci_type, labeller = labeller(ci_type = facet_labs)) +
   coord_flip() +
-  labs(x = ,
-       y = Mean Rating,
-       color = ) +
-  theme(legend.position = bottom)
+  labs(x = '',
+       y = 'Mean Rating',
+       color = '') +
+  theme(legend.position = 'bottom')
 
-# ggsave(ci traits plot.jpeg,
-#        device = jpeg,
-#        units = cm,
-#        path = plots)
+# ggsave('ci traits plot.jpeg',
+#        device = 'jpeg',
+#        units = 'cm',
+#        path = 'plots')
 
 
 plot_age <- df_stims %>%
   group_by(ci_type, img_cat) %>%
-  get_summary_stats(percage, type = mean_ci)
+  get_summary_stats(percage, type = 'mean_ci')
 
 df_stims %>%
   ggplot(aes(ci_type, percage, fill = img_cat, color = img_cat)) +
-  geom_violin(color = black,
+  geom_violin(color = 'black',
               alpha = .15) +
   geom_point(shape = 4,
              position = position_jitterdodge(.15, .05, .9)) +
   geom_point(data = plot_age, aes(ci_type, mean, color = img_cat),
              shape = 7,
-             color = black,
+             color = 'black',
              size = 5,
              position = position_dodge(.9)) +
   geom_errorbar(data = plot_age,
                 aes(x = ci_type, y = mean, min = mean - ci, ymax = mean + ci),
-                color = black,
+                color = 'black',
                 width = .25,
                 position = position_dodge(.9)) +
-  scale_fill_manual(values = c(#034694, #dba111),
-                    labels = c(Anti-CIs, True-CIs)) +
-  scale_color_manual(values = c(#034694, #dba111),
-                     labels = c(Anti-CIs, True-CIs)) +
+  scale_fill_manual(values = c('#034694', '#dba111'),
+                    labels = c('Anti-CIs', 'True-CIs')) +
+  scale_color_manual(values = c('#034694', '#dba111'),
+                     labels = c('Anti-CIs', 'True-CIs')) +
   scale_y_continuous(breaks = seq(30, 44, 2)) +
   expand_limits(y = 44) +
-  scale_x_discrete(labels = c(Bullshittee CIs, Bullshitter CIs)) +
-  labs(x = ,
-       y = Perceived Age,
-       fill = ,
-       color = ) +
+  scale_x_discrete(labels = c('Bullshittee CIs', 'Bullshitter CIs')) +
+  labs(x = '',
+       y = 'Perceived Age',
+       fill = '',
+       color = '') +
   theme_light() +
-  theme(legend.position = bottom)
+  theme(legend.position = 'bottom')
 
-# ggsave(ci percived age plot.jpeg,
-#        device = jpeg,
-#        units = cm,
-#        path = plots)
+# ggsave('ci percived age plot.jpeg',
+#        device = 'jpeg',
+#        units = 'cm',
+#        path = 'plots')
 
 
 # join stim-level ratings data with participant id table
-p_ids <- readxl::read_excel(participant ids.xlsx) %>%
+p_ids <- readxl::read_excel('participant ids.xlsx') %>%
   select(p_id, ci_id)
 
 full_df <- df_stims %>%
-  left_join(p_ids, by = c(stimID = ci_id)) %>%
+  left_join(p_ids, by = c('stimID' = 'ci_id')) %>%
   select(p_id, stimID:percage)
 
-# write.csv(full_df, participant ids with ci ratings.csv, row.names = F)
+# write.csv('full_df', 'participant ids with ci ratings.csv', row.names = F)
 
 
 # get a correlation of all traits
 trait_cors <- corr.test(full_df[,5:18])
 
 ggcorrplot(trait_cors$r,
-           type = lower,
+           type = 'lower',
            lab = T,
            p.mat = trait_cors$p)
 
@@ -649,7 +649,7 @@ ggcorrplot(trait_cors$r,
 
 # get some rankings based on traits
 bser_true_cis_sorted <- full_df %>%
-  filter(ci_type == bullshitter & img_cat == trueCI) %>%
+  filter(ci_type == 'bullshitter' & img_cat == 'trueCI') %>%
   arrange(trustworthy,
           attractive,
           wise,
@@ -665,7 +665,7 @@ bser_true_cis_sorted <- full_df %>%
           masculine)
 
 bsee_true_cis_sorted <- full_df %>%
-  filter(ci_type == bullshittee & img_cat == trueCI) %>%
+  filter(ci_type == 'bullshittee' & img_cat == 'trueCI') %>%
   arrange(trustworthy,
           attractive,
           wise,
@@ -706,46 +706,46 @@ get_n_factors <- function(df, sub_val = 0, rot = none) {
     geom_point() +
     geom_line() +
     theme_bw() +
-    labs(x = Number of factors,
-         y = Initial eigenvalues,
-         title = Scree plot,
-         subtitle = Based on unreduced correlation matrix) +
-    theme(plot.title = element_text(face = bold, hjust = .5),
-          plot.subtitle = element_text(face = italic, hjust = .5))
+    labs(x = 'Number of factors',
+         y = 'Initial eigenvalues',
+         title = 'Scree plot',
+         subtitle = 'Based on unreduced correlation matrix') +
+    theme(plot.title = element_text(face = 'bold', hjust = .5),
+          plot.subtitle = element_text(face = 'italic', hjust = .5))
   
   fa.parallel(df)
 }
 
 get_n_factors(df = bser_true_cis_sorted[,5:18],
               sub_val = 2,
-              rot = none)
+              rot = 'none')
 
 get_n_factors(df = bsee_true_cis_sorted[,5:18],
               sub_val = 2,
-              rot = none)
+              rot = 'none')
 
 
 # conduct efas to explore trait contributions
 bser_efa <- fa(bser_true_cis_sorted[, 5:18],
                nfactors = 2,
-               fm = ml,
+               fm = 'ml',
                max.iter = 500,
-               rotate = varimax)
+               rotate = 'varimax')
 bser_efa
 fa.diagram(bser_efa)
 
 
 bsee_efa <- fa(bsee_true_cis_sorted[, 5:18],
                nfactors = 2,
-               fm = ml,
+               fm = 'ml',
                max.iter = 500,
-               rotate = varimax)
+               rotate = 'varimax')
 bsee_efa
 fa.diagram(bsee_efa)
 
 
 bser_true_cis_sorted <- full_df %>%
-  filter(ci_type == bullshitter & img_cat == trueCI) %>%
+  filter(ci_type == 'bullshitter' & img_cat == 'trueCI') %>%
   arrange(sociable,
           ambitious,
           warm,
@@ -754,7 +754,7 @@ bser_true_cis_sorted <- full_df %>%
           masculine)
 
 bsee_true_cis_sorted <- full_df %>%
-  filter(ci_type == bullshittee & img_cat == trueCI) %>%
+  filter(ci_type == 'bullshittee' & img_cat == 'trueCI') %>%
   arrange(warm,
           trustworthy,
           sociable,
@@ -765,7 +765,7 @@ bsee_true_cis_sorted <- full_df %>%
 
 top_bser <- bser_true_cis_sorted %>% tail(20) %>% arrange(stimID)
 top_bser_anti <- full_df %>%
-  filter(ci_type == bullshitter & img_cat == antiCI) %>%
+  filter(ci_type == 'bullshitter' & img_cat == 'antiCI') %>%
   filter(p_id %in% top_bser$p_id)
 
 s2_stims <- rbind(top_bser, top_bser_anti)
@@ -777,13 +777,13 @@ mod5 <- manova(cbind(sociable,
                      narcissistic,
                      masculine) ~ img_cat,
                data = s2_stims)
-summary(mod5, Wilks)
+summary(mod5, 'Wilks')
 
 
 
 top_bsee <- bsee_true_cis_sorted %>% tail(20) %>% arrange(stimID)
 top_bsee_anti <- full_df %>%
-  filter(ci_type == bullshittee & img_cat == antiCI) %>%
+  filter(ci_type == 'bullshittee' & img_cat == 'antiCI') %>%
   filter(p_id %in% top_bsee$p_id)
 
 s3_stims <- rbind(top_bsee, top_bsee_anti)
@@ -795,4 +795,4 @@ mod6 <- manova(cbind(warm,
                      masculine,
                      narcissistic) ~ img_cat,
                data = s3_stims)
-summary(mod6, Wilks)
+summary(mod6, 'Wilks')
