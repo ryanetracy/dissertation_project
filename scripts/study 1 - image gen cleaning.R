@@ -67,3 +67,31 @@ df_final %>%
   mutate(n = n/300)
 
 # write.csv(df_final, 'data files/image_gen_data.csv', row.names = F)
+
+total_n <- 98
+
+df_raw %>%
+  select(age_resp.keys) %>%
+  na.omit() %>%
+  # rename('age' = 'age_resp.keys')
+  group_by(age_resp.keys) %>%
+  count() %>%
+  mutate(age_resp.keys = case_when(age_resp.keys == 'a' ~ '18-27',
+                                   age_resp.keys == 'b' ~ '28-37'),
+         prop = n / total_n)
+
+df_raw %>%
+  select(sex_resp.keys) %>%
+  na.omit() %>%
+  # rename('age' = 'age_resp.keys')
+  group_by(sex_resp.keys) %>%
+  count() %>%
+  mutate(prop = n / total_n)
+
+df_raw %>%
+  select(race_resp.keys) %>%
+  na.omit() %>%
+  # rename('age' = 'age_resp.keys')
+  group_by(race_resp.keys) %>%
+  count() %>%
+  mutate(prop = n / total_n)
