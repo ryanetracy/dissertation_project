@@ -659,9 +659,122 @@ ggcorrplot(trait_cors$r,
 
 
 
-# get some rankings based on traits
+# efa on the traits data
+
+# number of factors to extract
+get_n_factors <- function(df, sub_val = 0, rot = none) {
+  fa_fit <-  fa(df, nfactors = ncol(df) - sub_val, rotate = rot)
+  n_factors <-  length(fa_fit$e.values)
+  
+  scree_plt <- data.frame(
+    factor_n = as.factor(1:n_factors),
+    eigenval = fa_fit$e.values)
+  
+  scree_plt %>%
+    ggplot(aes(x = factor_n, y = eigenval, group = 1)) +
+    geom_point() +
+    geom_line() +
+    theme_bw() +
+    labs(x = 'Number of factors',
+         y = 'Initial eigenvalues',
+         title = 'Scree plot',
+         subtitle = 'Based on unreduced correlation matrix') +
+    theme(plot.title = element_text(face = 'bold', hjust = .5),
+          plot.subtitle = element_text(face = 'italic', hjust = .5))
+  
+  fa.parallel(df)
+}
+
+# efa on the full dataset
+full_df_sorted <- full_df %>%
+  arrange(trustworthy,
+          attractive,
+          wise,
+          gullible,
+          dominant,
+          sociable,
+          ambitious,
+          deceptive,
+          narcissistic,
+          competent,
+          warm,
+          eurocentric,
+          masculine) %>%
+  mutate(is_bullshitter = if_else(ci_type == 'bullshitter', 1, 0),
+         is_trueCI = if_else(img_cat == 'trueCI', 1, 0))
+
+# measuring factorability
+KMO(r = cor(full_df_sorted[, 5:18]))
+cortest.bartlett(full_df_sorted[, 5:18])
+det(cor(full_df_sorted[, 5:18]))
+
+get_n_factors(df = full_df_sorted[, 5:18],
+              sub_val = 2,
+              rot = 'none')
+
+full_efa <- fa(full_df_sorted[, 5:18],
+               nfactors = 2,
+               fm = 'ml',
+               max.iter = 500,
+               rotate = 'varimax')
+full_efa
+fa.diagram(full_efa)
+
+efa_scores_df <- data.frame(
+  stim_id = full_df_sorted$stimID,
+  social_competence = full_efa$scores[, 1],
+  strategic_charisma = full_efa$scores[, 2],
+  # youthfullness = full_efa$scores[, 3],
+  is_bullshitter = full_df_sorted$is_bullshitter,
+  is_trueCI = full_df_sorted$is_trueCI
+)
+
+# predict whether a target is a bullshitter or bullshittee
+glm1 <- glm(is_bullshitter ~ social_competence 
+            + strategic_charisma,
+            # + youthfullness, 
+            family = binomial, 
+            data = efa_scores_df)
+summary(glm1)
+
+# true vs. anti CI
+glm2 <- glm(is_trueCI ~ social_competence 
+            + strategic_charisma,
+            # + youthfullness, 
+            family = binomial, 
+            data = efa_scores_df)
+summary(glm2)
+
+odds_ratio <- round(exp(glm2$coefficients), 3)
+mod_se <- sqrt(diag(vcov(glm2)))
+cbind(
+  odds_ratio,
+  OR_ci_ll = round(glm2$coefficients - (1.96 * mod_se), 3),
+  OR_ci_ul = round(glm2$coefficients + (1.96 * mod_se), 3)
+)
+
+
+
+### ignore (may delete later) ###
+# do this for the separate CI categories
 bser_true_cis_sorted <- full_df %>%
   filter(ci_type == 'bullshitter' & img_cat == 'trueCI') %>%
+  arrange(trustworthy,
+          attractive,
+          wise,
+          gullible,
+          dominant,
+          sociable,
+          ambitious,
+          deceptive,
+          narcissistic,
+          competent,
+          warm,
+          eurocentric,
+          masculine)
+
+bser_anti_cis_sorted <- full_df %>%
+  filter(ci_type == 'bullshitter' & img_cat == 'antiCI') %>%
   arrange(trustworthy,
           attractive,
           wise,
@@ -692,6 +805,22 @@ bsee_true_cis_sorted <- full_df %>%
           eurocentric,
           masculine)
 
+bsee_anti_cis_sorted <- full_df %>%
+  filter(ci_type == 'bullshittee' & img_cat == 'antiCI') %>%
+  arrange(trustworthy,
+          attractive,
+          wise,
+          gullible,
+          dominant,
+          sociable,
+          ambitious,
+          deceptive,
+          narcissistic,
+          competent,
+          warm,
+          eurocentric,
+          masculine)
+
 
 # measuring factorability
 KMO(r = cor(bser_true_cis_sorted[,5:18]))
@@ -703,32 +832,11 @@ cortest.bartlett(bsee_true_cis_sorted[,5:18])
 det(cor(bser_true_cis_sorted[,5:18]))
 det(cor(bsee_true_cis_sorted[,5:18]))
 
-
-# number of factors to extract
-get_n_factors <- function(df, sub_val = 0, rot = none) {
-  fa_fit <-  fa(df, nfactors = ncol(df) - sub_val, rotate = rot)
-  n_factors <-  length(fa_fit$e.values)
-  
-  scree_plt <- data.frame(
-    factor_n = as.factor(1:n_factors),
-    eigenval = fa_fit$e.values)
-  
-  scree_plt %>%
-    ggplot(aes(x = factor_n, y = eigenval, group = 1)) +
-    geom_point() +
-    geom_line() +
-    theme_bw() +
-    labs(x = 'Number of factors',
-         y = 'Initial eigenvalues',
-         title = 'Scree plot',
-         subtitle = 'Based on unreduced correlation matrix') +
-    theme(plot.title = element_text(face = 'bold', hjust = .5),
-          plot.subtitle = element_text(face = 'italic', hjust = .5))
-  
-  fa.parallel(df)
-}
-
 get_n_factors(df = bser_true_cis_sorted[,5:18],
+              sub_val = 2,
+              rot = 'none')
+
+get_n_factors(df = bser_anti_cis_sorted[,5:18],
               sub_val = 2,
               rot = 'none')
 
@@ -736,24 +844,70 @@ get_n_factors(df = bsee_true_cis_sorted[,5:18],
               sub_val = 2,
               rot = 'none')
 
-
-# conduct efas to explore trait contributions
-bser_efa <- fa(bser_true_cis_sorted[, 5:18],
-               nfactors = 3,
-               fm = 'ml',
-               max.iter = 500,
-               rotate = 'varimax')
-bser_efa
-fa.diagram(bser_efa)
+get_n_factors(df = bsee_anti_cis_sorted[,5:18],
+              sub_val = 2,
+              rot = 'none')
 
 
-bsee_efa <- fa(bsee_true_cis_sorted[, 5:18],
-               nfactors = 3,
-               fm = 'ml',
-               max.iter = 500,
-               rotate = 'varimax')
-bsee_efa
-fa.diagram(bsee_efa)
+# bullshitters
+bser_efa_true <- fa(bser_true_cis_sorted[, 5:18],
+                    nfactors = 3,
+                    fm = 'ml',
+                    max.iter = 500,
+                    rotate = 'varimax')
+bser_efa_true
+fa.diagram(bser_efa_true)
+
+bser_efa_anti <- fa(bser_anti_cis_sorted[, 5:18],
+                    nfactors = 3,
+                    fm = 'ml',
+                    max.iter = 500,
+                    rotate = 'varimax')
+bser_efa_anti
+fa.diagram(bser_efa_anti)
+# 
+# # create a dataframe from these scores to use in subsequent studies
+# scores1 <- data.frame(
+#   stimID = bser_true_cis_sorted$stimID,
+#   social_competence = bser_efa_true$scores[, 1],
+#   strategic_charisma = bser_efa_true$scores[, 2],
+#   youthfulness = bser_efa_true$scores[, 3],
+#   target_category = 'bullshitter',
+#   ci_type = 'trueCI'
+# )
+# 
+# scores2 <- data.frame(
+#   stimID = bser_anti_cis_sorted$stimID,
+#   social_competence = bser_efa_anti$scores[, 1],
+#   strategic_charisma = bser_efa_anti$scores[, 2],
+#   youthfulness = bser_efa_anti$scores[, 3],
+#   target_category = 'bullshitter',
+#   ci_type = 'antiCI'
+# )
+# 
+# bullshitter_factor_scores <- rbind(scores1, scores2)
+# # write.csv(bullshitter_factor_scores, 'efa_scores_bullshitter.csv', row.names = F)
+
+
+# bullshittees
+bsee_efa_true <- fa(bsee_true_cis_sorted[, 5:18],
+                    nfactors = 3,
+                    fm = 'ml',
+                    max.iter = 500,
+                    rotate = 'varimax')
+bsee_efa_true
+fa.diagram(bsee_efa_true)
+
+bsee_efa_anti <- fa(bsee_anti_cis_sorted[, 5:18],
+                    nfactors = 3,
+                    fm = 'ml',
+                    max.iter = 500,
+                    rotate = 'varimax')
+bsee_efa_anti
+fa.diagram(bsee_efa_anti)
+
+# these are very different..
+
 
 
 bser_true_cis_sorted <- full_df %>%
