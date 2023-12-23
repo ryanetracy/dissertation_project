@@ -753,6 +753,7 @@ cbind(
   OR_ci_ul = round(glm2$coefficients + (1.96 * mod_se), 3)
 )
 
+# write.csv(efa_scores_df, 'efa_ci_scores.csv', row.names = F)
 
 
 ### ignore (may delete later) ###
@@ -886,7 +887,6 @@ fa.diagram(bser_efa_anti)
 # )
 # 
 # bullshitter_factor_scores <- rbind(scores1, scores2)
-# # write.csv(bullshitter_factor_scores, 'efa_scores_bullshitter.csv', row.names = F)
 
 
 # bullshittees
