@@ -56,7 +56,7 @@ demos <- df %>%
 demos %>%
   select(age) %>%
   filter(age != 'Mairely Tineo') %>%
-  mutate_at(.vars = age, .funs = as.numeric) %>%
+  mutate_at(.vars = 'age', .funs = as.numeric) %>%
   get_summary_stats(age, type = 'mean_sd')
 
 demos %>%
@@ -385,7 +385,8 @@ group_means <- df_stims %>%
                     warm,
                     eurocentric,
                     masculine,
-                    percage, type = 'mean_sd')
+                    percage, type = 'mean_sd') %>%
+  mutate_at(.vars = c('mean', 'sd'), .funs = round, digits = 2)
 
 # group_means %>% print(n = 60)
 
@@ -512,13 +513,13 @@ table_names <- c(
 )
 
 full_table <- rbind(group_means_table_bser, group_means_table_bsee) %>%
-  mutate(variable = case_when(
-    variable == 'Percage' ~ 'Perceived Age',
-    TRUE ~ variable
-  )) # add in star values to indicate significance
+  mutate(
+    variable = case_when(variable == 'Percage' ~ 'Perceived Age',
+                         TRUE ~ variable))
 names(full_table) <- table_names
 full_table %>% print(n = 28)
 
+# write.csv(full_table, 'full ratings means and d values.csv', row.names = F)
 
 # make a plot
 plot_means <- df_stims %>%
@@ -541,7 +542,7 @@ plot_means <- df_stims %>%
 facet_labs <- c('Bullshittees', 'Bullshitters')
 names(facet_labs) <- c('bullshittee', 'bullshitter')
 
-plot_means %>%
+traits_plot <- plot_means %>%
   ggplot(aes(variable, mean, color = img_cat)) +
   geom_point(shape = 7,
              size = 5,
@@ -567,13 +568,15 @@ plot_means %>%
       'masculine'
     )
   )) +
-  theme_light() +
+  theme_light(base_size = 25) +
   facet_wrap(~ ci_type, labeller = labeller(ci_type = facet_labs)) +
   coord_flip() +
   labs(x = '',
        y = 'Mean Rating',
        color = '') +
   theme(legend.position = 'bottom')
+
+traits_plot
 
 # ggsave('ci traits plot.jpeg',
 #        device = 'jpeg',
@@ -585,7 +588,7 @@ plot_age <- df_stims %>%
   group_by(ci_type, img_cat) %>%
   get_summary_stats(percage, type = 'mean_ci')
 
-df_stims %>%
+age_plot <- df_stims %>%
   ggplot(aes(ci_type, percage, fill = img_cat, color = img_cat)) +
   geom_violin(color = 'black',
               alpha = .15) +
@@ -612,14 +615,23 @@ df_stims %>%
        y = 'Perceived Age',
        fill = '',
        color = '') +
-  theme_light() +
+  theme_light(base_size = 25) +
   theme(legend.position = 'bottom')
+
+age_plot
 
 # ggsave('ci percived age plot.jpeg',
 #        device = 'jpeg',
 #        units = 'cm',
 #        path = 'plots')
 
+ggpubr::ggarrange(traits_plot, age_plot,
+          ncol = 2, nrow = 1)
+
+# ggsave('study 1 ratings plot combined.jpg',
+#        device = 'jpeg',
+#        units = 'cm',
+#        path = 'plots')
 
 # join stim-level ratings data with participant id table
 p_ids <- readxl::read_excel('participant ids.xlsx') %>%
@@ -727,7 +739,7 @@ get_n_factors(df = bsee_true_cis_sorted[,5:18],
 
 # conduct efas to explore trait contributions
 bser_efa <- fa(bser_true_cis_sorted[, 5:18],
-               nfactors = 2,
+               nfactors = 3,
                fm = 'ml',
                max.iter = 500,
                rotate = 'varimax')
@@ -736,7 +748,7 @@ fa.diagram(bser_efa)
 
 
 bsee_efa <- fa(bsee_true_cis_sorted[, 5:18],
-               nfactors = 2,
+               nfactors = 3,
                fm = 'ml',
                max.iter = 500,
                rotate = 'varimax')
