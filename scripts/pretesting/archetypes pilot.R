@@ -2,7 +2,8 @@
 # bullshitter/bullshitee pilot study
 #####################################
 
-source('load_and_install.R')
+url = 'https://github.com/ryanetracy/misc_functions/blob/main/misc_functions.R?raw=TRUE'
+devtools::source_url(url)
 
 # packages
 pckgs <- c(
@@ -14,10 +15,13 @@ pckgs <- c(
   'FactoMineR',
   'factoextra',
   'ggrepel',
-  'ggpubr'
-  )
+  'ggpubr',
+  'caret',
+  'nnet'
+)
 
-load_and_install(package_list = pckgs)
+package_loader(pckgs)
+
 
 
 # data
@@ -141,21 +145,24 @@ ggcorrplot(socl_bsee_corrs$r,
            type = 'lower',
            p.mat = socl_bsee_corrs$p)
 
-# measuring factorability
-KMO(r = cor(corporate_bullshitter[2:27]))
-KMO(r = cor(corporate_bullshittee[2:27]))
-KMO(r = cor(social_bullshitter[2:27]))
-KMO(r = cor(social_bullshittee[2:27]))
 
-cortest.bartlett(corporate_bullshitter[2:27])
-cortest.bartlett(corporate_bullshittee[2:27])
-cortest.bartlett(social_bullshitter[2:27])
-cortest.bartlett(social_bullshittee[2:27])
+# measure factorability of the full dataset
+df_merged <- bind_rows(corporate_bullshitter,
+                       corporate_bullshittee,
+                       social_bullshitter,
+                       social_bullshittee) %>%
+  mutate(person_type = case_when(
+    condition == 'corporate_bullshitter' | condition == 'social_bullshitter' ~ 'bullshitter',
+    condition == 'corporate_bullshittee' | condition == 'social_bullshittee' ~ 'bullshittee'
+  ),
+  bullshit_type = case_when(
+    condition == 'corporate_bullshitter' | condition == 'corporate_bullshittee' ~ 'corporate',
+    condition == 'social_bullshitter' | condition == 'social_bullshittee' ~ 'social'
+  ))
 
-det(cor(corporate_bullshitter[2:27]))
-det(cor(corporate_bullshittee[2:27]))
-det(cor(social_bullshitter[2:27]))
-det(cor(social_bullshittee[2:27]))
+KMO(r = cor(df_merged[2:27]))
+cortest.bartlett(df_merged[2:27])
+det(cor(df_merged[2:27]))
 
 
 # number of factors to extract
@@ -165,45 +172,30 @@ get_n_factors <- function(df, sub_val = 0, rot = 'none') {
   
   scree_plt <- data.frame(
     factor_n <- as.factor(1:n_factors),
-    eigenval <- fa_fit$e.values)
+    eigenval <- fa_fit$e.values
+  )
   
-  scree_plt %>%
-    ggplot(aes(x = factor_n, y = eigenval, group = 1)) +
-    geom_point() +
-    geom_line() +
-    theme_bw() +
-    labs(x = 'Number of factors',
-         y = 'Initial eigenvalues',
-         title = 'Scree plot',
-         subtitle = 'Based on unreduced correlation matrix') +
-    theme(plot.title = element_text(face = 'bold', hjust = .5),
-          plot.subtitle = element_text(face = 'italic', hjust = .5))
+  # scree_plt %>%
+  #   ggplot(aes(x = factor_n, y = eigenval, group = 1)) +
+  #   geom_point() +
+  #   geom_line() +
+  #   theme_bw() +
+  #   labs(x = 'Number of factors',
+  #        y = 'Initial eigenvalues',
+  #        title = 'Scree plot',
+  #        subtitle = 'Based on unreduced correlation matrix') +
+  #   theme(plot.title = element_text(face = 'bold', hjust = .5),
+  #         plot.subtitle = element_text(face = 'italic', hjust = .5))
   
   fa.parallel(df)
 }
-
-get_n_factors(df = corporate_bullshitter[2:27],
-              sub_val = 2,
-              rot = 'none')
-
-get_n_factors(df = corporate_bullshittee[2:27],
-              sub_val = 2,
-              rot = 'none')
-
-get_n_factors(df = social_bullshitter[2:27],
-              sub_val = 2,
-              rot = 'none')
-
-get_n_factors(df = social_bullshittee[2:27],
-              sub_val = 2,
-              rot = 'none')
 
 
 # plot the traits for each one in a scatterplot
 fact_anal_scatter <- function(
     factor_analysis_df
-    ) {
-
+) {
+  
   # plot 1
   df_1 <- as.data.frame(factor_analysis_df$loadings[,c(1,2)])
   names(df_1) <- c('factor_1', 'factor_2')
@@ -217,7 +209,7 @@ fact_anal_scatter <- function(
     # scale_y_continuous(breaks = c(-1, 1, .1)) +
     labs(x = 'factor 1 loadings',
          y = 'factor 2 loadings')
-
+  
   # plot 2
   df_2 <- as.data.frame(factor_analysis_df$loadings[,c(1,3)])
   names(df_2) <- c('factor_1', 'factor_3')
@@ -231,7 +223,7 @@ fact_anal_scatter <- function(
     # scale_y_continuous(breaks = c(-1, 1, .1)) +
     labs(x = 'factor 1 loadings',
          y = 'factor 3 loadings')
-
+  
   # plot 3
   df_3 <- as.data.frame(factor_analysis_df$loadings[,c(2,3)])
   names(df_3) <- c('factor_2', 'factor_3')
@@ -257,6 +249,155 @@ fact_anal_scatter <- function(
             nrow = 3)
   
 }
+
+get_n_factors(df_merged[2:27], sub_val = 1, rot = 'none')
+
+full_efa <- fa(df_merged[2:27],
+               nfactors = 4,
+               fm = 'ml',
+               max.iter = 500,
+               rotate = 'varimax')
+full_efa
+fa.diagram(full_efa)
+
+fact_anal_scatter(full_efa)
+
+# convert labels to binary outcomes
+df_merged <- df_merged %>%
+  mutate(
+    is_bullshitter = if_else(person_type == 'bullshitter', 1, 0),
+    is_corporate = if_else(bullshit_type == 'corporate', 1, 0)
+  )
+
+efa_scores_df <- data.frame(
+  subj = df_merged$subj,
+  var1 = full_efa$scores[, 1], # social competence
+  var2 = full_efa$scores[, 2], # social aggression
+  var3 = full_efa$scores[, 3], # gullibility
+  var4 = full_efa$scores[, 4], # social drive
+  is_bullshitter = df_merged$is_bullshitter,
+  is_corporate = df_merged$is_corporate
+)
+
+glm1 <- glm(is_bullshitter ~ var1 + var2 + var3 + var4,
+            family = binomial,
+            data = efa_scores_df)
+summary(glm1)
+odds_ratio <- round(exp(glm1$coefficients), 3)
+mod_se <- sqrt(diag(vcov(glm1)))
+cbind(
+  odds_ratio,
+  OR_ci_ll = round(glm1$coefficients - (1.96 * mod_se), 3),
+  OR_ci_ul = round(glm1$coefficients + (1.96 * mod_se), 3)
+)
+
+glm2 <- glm(is_corporate ~ var1 + var2 + var3 + var4,
+            family = binomial,
+            data = efa_scores_df)
+summary(glm2)
+odds_ratio <- round(exp(glm2$coefficients), 3)
+mod_se <- sqrt(diag(vcov(glm2)))
+cbind(
+  odds_ratio,
+  OR_ci_ll = round(glm2$coefficients - (1.96 * mod_se), 3),
+  OR_ci_ul = round(glm2$coefficients + (1.96 * mod_se), 3)
+)
+
+# get overall means per bullshitter vs. bullshittee
+type_means <- efa_scores_df %>%
+  group_by(is_bullshitter) %>%
+  get_summary_stats(var1, var2, var3, var4, type = 'mean_ci')
+type_means
+
+stmt_means <- efa_scores_df %>%
+  group_by(is_corporate) %>%
+  get_summary_stats(var1, var2, var3, var4, type = 'mean_ci')
+stmt_means
+
+# visualize the factor comparisons
+type_means %>%
+  ggplot(aes(variable, mean, fill = as.factor(is_bullshitter))) +
+  geom_bar(stat = 'identity',
+           color = 'black',
+           alpha = .75,
+           position = position_dodge(.9)) +
+  geom_errorbar(aes(ymin = mean - ci, ymax = mean + ci),
+                color = 'black',
+                alpha = .75,
+                position = position_dodge(.9),
+                width = .25) +
+  theme_minimal() +
+  scale_x_discrete(labels = c('social competence',
+                              'social aggression',
+                              'gullibility',
+                              'social drive')) +
+  scale_fill_manual(values = c('#006666', '#ffd600'),
+                    labels = c('bullshittee', 'bullshitter')) +
+  labs(x = 'latent factor',
+       y = 'mean loading score',
+       fill = '') +
+  theme(legend.position = 'bottom')
+  
+
+# run a multiclass classification model
+efa_scores_df <- efa_scores_df %>%
+  mutate(
+    label = case_when(
+      is_bullshitter == 1 & is_corporate == 1 ~ 'corp_bullshitter',
+      is_bullshitter == 0 & is_corporate == 1 ~ 'corp_bullshittee',
+      is_bullshitter == 1 & is_corporate == 0 ~ 'soc_bullshitter',
+      is_bullshitter == 0 & is_corporate == 0 ~ 'soc_bullshittee'
+    )
+  )
+
+# split into train/test sets
+training_samples <- efa_scores_df$label %>%
+  createDataPartition(p = .75, list = F)
+
+train_df <- efa_scores_df[training_samples, ]
+test_df <- efa_scores_df[-training_samples, ]
+
+# build and evaluate model
+mmod1 <- multinom(label ~ var1 + var2 + var3 + var4, data = train_df)
+summary(mmod1)
+pred_classes <- mmod1 %>% predict(test_df)
+mean(pred_classes == test_df$label) # not accurate at all
+
+
+# run on each cell indiviudally (exploration)
+# measuring factorability
+KMO(r = cor(corporate_bullshitter[2:27]))
+KMO(r = cor(corporate_bullshittee[2:27]))
+KMO(r = cor(social_bullshitter[2:27]))
+KMO(r = cor(social_bullshittee[2:27]))
+
+cortest.bartlett(corporate_bullshitter[2:27])
+cortest.bartlett(corporate_bullshittee[2:27])
+cortest.bartlett(social_bullshitter[2:27])
+cortest.bartlett(social_bullshittee[2:27])
+
+det(cor(corporate_bullshitter[2:27]))
+det(cor(corporate_bullshittee[2:27]))
+det(cor(social_bullshitter[2:27]))
+det(cor(social_bullshittee[2:27]))
+
+
+get_n_factors(df = corporate_bullshitter[2:27],
+              sub_val = 2,
+              rot = 'none')
+
+get_n_factors(df = corporate_bullshittee[2:27],
+              sub_val = 2,
+              rot = 'none')
+
+get_n_factors(df = social_bullshitter[2:27],
+              sub_val = 2,
+              rot = 'none')
+
+get_n_factors(df = social_bullshittee[2:27],
+              sub_val = 2,
+              rot = 'none')
+
 
 # check factor analyses
 (c1_efa <- fa(corporate_bullshitter[2:27],
@@ -365,21 +506,7 @@ fact_anal_scatter(s2_efa)
 
 
 
-# merge the datasets and run manova on all traits
-df_merged <- bind_rows(corporate_bullshitter,
-                       corporate_bullshittee,
-                       social_bullshitter,
-                       social_bullshittee)
-df_merged <- df_merged %>%
-  mutate(person_type = case_when(
-    condition == 'corporate_bullshitter' | condition == 'social_bullshitter' ~ 'bullshitter',
-    condition == 'corporate_bullshittee' | condition == 'social_bullshittee' ~ 'bullshittee'
-  ),
-  bullshit_type = case_when(
-    condition == 'corporate_bullshitter' | condition == 'corporate_bullshittee' ~ 'corporate',
-    condition == 'social_bullshitter' | condition == 'social_bullshittee' ~ 'social'
-  ))
-
+# run manova on all traits in the merge df
 fit_1 <- manova(
   cbind(
     trustworthiness,
@@ -398,7 +525,7 @@ fit_1 <- manova(
     intelligence,
     wisdom,
     sociability,
-    friendliensss,
+    friendliness,
     attractiveness,
     motivating,
     inspirational,
