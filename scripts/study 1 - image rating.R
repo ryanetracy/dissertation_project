@@ -21,7 +21,9 @@ pckgs <- c(
   'factoextra',
   'ggcorrplot',
   'tidyverse',
-  'ggrepel'
+  'ggrepel',
+  'caret',
+  'nnet'
 )
 
 package_loader(pckgs)
@@ -663,26 +665,29 @@ ggcorrplot(trait_cors$r,
 
 # number of factors to extract
 get_n_factors <- function(df, sub_val = 0, rot = none) {
-  fa_fit <-  fa(df, nfactors = ncol(df) - sub_val, rotate = rot)
-  n_factors <-  length(fa_fit$e.values)
+  fa_fit <- fa(df, nfactors = ncol(df) - sub_val, rotate = rot)
+  n_factors <- length(fa_fit$e.values)
   
-  scree_plt <- data.frame(
-    factor_n = as.factor(1:n_factors),
-    eigenval = fa_fit$e.values)
+  scree_plt <- data.frame(factor_n = as.factor(1:n_factors),
+                          eigenval = fa_fit$e.values)
   
   scree_plt %>%
     ggplot(aes(x = factor_n, y = eigenval, group = 1)) +
     geom_point() +
     geom_line() +
     theme_bw() +
-    labs(x = 'Number of factors',
-         y = 'Initial eigenvalues',
-         title = 'Scree plot',
-         subtitle = 'Based on unreduced correlation matrix') +
-    theme(plot.title = element_text(face = 'bold', hjust = .5),
-          plot.subtitle = element_text(face = 'italic', hjust = .5))
+    labs(
+      x = 'Number of factors',
+      y = 'Initial eigenvalues',
+      title = 'Scree plot',
+      subtitle = 'Based on unreduced correlation matrix'
+    ) +
+    theme(
+      plot.title = element_text(face = 'bold', hjust = .5),
+      plot.subtitle = element_text(face = 'italic', hjust = .5)
+    )
   
-  fa.parallel(df)
+  # fa.parallel(df)
 }
 
 # efa on the full dataset
@@ -707,6 +712,7 @@ full_df_sorted <- full_df %>%
 KMO(r = cor(full_df_sorted[, 5:18]))
 cortest.bartlett(full_df_sorted[, 5:18])
 det(cor(full_df_sorted[, 5:18]))
+fa.parallel(full_df_sorted[, 5:18])
 
 get_n_factors(df = full_df_sorted[, 5:18],
               sub_val = 2,
@@ -723,7 +729,7 @@ fa.diagram(full_efa)
 efa_scores_df <- data.frame(
   stim_id = full_df_sorted$stimID,
   social_competence = full_efa$scores[, 1],
-  strategic_charisma = full_efa$scores[, 2],
+  social_aggression = full_efa$scores[, 2],
   # youthfullness = full_efa$scores[, 3],
   is_bullshitter = full_df_sorted$is_bullshitter,
   is_trueCI = full_df_sorted$is_trueCI
@@ -731,7 +737,7 @@ efa_scores_df <- data.frame(
 
 # predict whether a target is a bullshitter or bullshittee
 glm1 <- glm(is_bullshitter ~ social_competence 
-            + strategic_charisma,
+            + social_aggression,
             # + youthfullness, 
             family = binomial, 
             data = efa_scores_df)
@@ -739,7 +745,7 @@ summary(glm1)
 
 # true vs. anti CI
 glm2 <- glm(is_trueCI ~ social_competence 
-            + strategic_charisma,
+            + social_aggression,
             # + youthfullness, 
             family = binomial, 
             data = efa_scores_df)
@@ -754,6 +760,33 @@ cbind(
 )
 
 # write.csv(efa_scores_df, 'efa_ci_scores.csv', row.names = F)
+
+# multiclass classification model
+efa_scores_df <- efa_scores_df %>%
+  mutate(
+    label = case_when(
+      is_bullshitter == 1 & is_trueCI == 1 ~ 'bullshitter_true',
+      is_bullshitter == 0 & is_trueCI == 1 ~ 'bullshittee_true',
+      is_bullshitter == 1 & is_trueCI == 0 ~ 'bullshitter_anti',
+      is_bullshitter == 0 & is_trueCI == 0 ~ 'bullshittee_anti'
+    )
+  )
+
+# split into train/test sets
+training_samples <- efa_scores_df$label %>%
+  createDataPartition(p = .7, list = F)
+
+train_df <- efa_scores_df[training_samples, ]
+test_df <- efa_scores_df[-training_samples, ]
+
+# build and evaluate model
+mmod1 <- multinom(label ~ social_competence + social_aggression, data = train_df)
+summary(mmod1)
+pred_classes <- mmod1 %>% predict(test_df)
+mean(pred_classes == test_df$label) # not accurate at all
+
+
+
 
 
 ### ignore (may delete later) ###
