@@ -166,28 +166,30 @@ det(cor(df_merged[2:27]))
 
 
 # number of factors to extract
-get_n_factors <- function(df, sub_val = 0, rot = 'none') {
-  fa_fit <-  fa(df, nfactors = ncol(df) - sub_val, rotate = rot)
-  n_factors <-  length(fa_fit$e.values)
+get_n_factors <- function(df, sub_val = 0, rot = none) {
+  fa_fit <- fa(df, nfactors = ncol(df) - sub_val, rotate = rot)
+  n_factors <- length(fa_fit$e.values)
   
-  scree_plt <- data.frame(
-    factor_n <- as.factor(1:n_factors),
-    eigenval <- fa_fit$e.values
-  )
+  scree_plt <- data.frame(factor_n = as.factor(1:n_factors),
+                          eigenval = fa_fit$e.values)
   
-  # scree_plt %>%
-  #   ggplot(aes(x = factor_n, y = eigenval, group = 1)) +
-  #   geom_point() +
-  #   geom_line() +
-  #   theme_bw() +
-  #   labs(x = 'Number of factors',
-  #        y = 'Initial eigenvalues',
-  #        title = 'Scree plot',
-  #        subtitle = 'Based on unreduced correlation matrix') +
-  #   theme(plot.title = element_text(face = 'bold', hjust = .5),
-  #         plot.subtitle = element_text(face = 'italic', hjust = .5))
+  scree_plt %>%
+    ggplot(aes(x = factor_n, y = eigenval, group = 1)) +
+    geom_point() +
+    geom_line() +
+    theme_bw() +
+    labs(
+      x = 'Number of factors',
+      y = 'Initial eigenvalues',
+      title = 'Scree plot',
+      subtitle = 'Based on unreduced correlation matrix'
+    ) +
+    theme(
+      plot.title = element_text(face = 'bold', hjust = .5),
+      plot.subtitle = element_text(face = 'italic', hjust = .5)
+    )
   
-  fa.parallel(df)
+  # fa.parallel(df)
 }
 
 
@@ -250,6 +252,7 @@ fact_anal_scatter <- function(
   
 }
 
+fa.parallel(df_merged[2:27])
 get_n_factors(df_merged[2:27], sub_val = 1, rot = 'none')
 
 full_efa <- fa(df_merged[2:27],
