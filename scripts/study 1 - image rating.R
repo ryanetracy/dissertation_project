@@ -790,156 +790,156 @@ mean(pred_classes == test_df$label) # not accurate at all
 
 
 ### ignore (may delete later) ###
-# do this for the separate CI categories
-bser_true_cis_sorted <- full_df %>%
-  filter(ci_type == 'bullshitter' & img_cat == 'trueCI') %>%
-  arrange(trustworthy,
-          attractive,
-          wise,
-          gullible,
-          dominant,
-          sociable,
-          ambitious,
-          deceptive,
-          narcissistic,
-          competent,
-          warm,
-          eurocentric,
-          masculine)
-
-bser_anti_cis_sorted <- full_df %>%
-  filter(ci_type == 'bullshitter' & img_cat == 'antiCI') %>%
-  arrange(trustworthy,
-          attractive,
-          wise,
-          gullible,
-          dominant,
-          sociable,
-          ambitious,
-          deceptive,
-          narcissistic,
-          competent,
-          warm,
-          eurocentric,
-          masculine)
-
-bsee_true_cis_sorted <- full_df %>%
-  filter(ci_type == 'bullshittee' & img_cat == 'trueCI') %>%
-  arrange(trustworthy,
-          attractive,
-          wise,
-          gullible,
-          dominant,
-          sociable,
-          ambitious,
-          deceptive,
-          narcissistic,
-          competent,
-          warm,
-          eurocentric,
-          masculine)
-
-bsee_anti_cis_sorted <- full_df %>%
-  filter(ci_type == 'bullshittee' & img_cat == 'antiCI') %>%
-  arrange(trustworthy,
-          attractive,
-          wise,
-          gullible,
-          dominant,
-          sociable,
-          ambitious,
-          deceptive,
-          narcissistic,
-          competent,
-          warm,
-          eurocentric,
-          masculine)
-
-
-# measuring factorability
-KMO(r = cor(bser_true_cis_sorted[,5:18]))
-KMO(r = cor(bsee_true_cis_sorted[,5:18]))
-
-cortest.bartlett(bser_true_cis_sorted[,5:18])
-cortest.bartlett(bsee_true_cis_sorted[,5:18])
-
-det(cor(bser_true_cis_sorted[,5:18]))
-det(cor(bsee_true_cis_sorted[,5:18]))
-
-get_n_factors(df = bser_true_cis_sorted[,5:18],
-              sub_val = 2,
-              rot = 'none')
-
-get_n_factors(df = bser_anti_cis_sorted[,5:18],
-              sub_val = 2,
-              rot = 'none')
-
-get_n_factors(df = bsee_true_cis_sorted[,5:18],
-              sub_val = 2,
-              rot = 'none')
-
-get_n_factors(df = bsee_anti_cis_sorted[,5:18],
-              sub_val = 2,
-              rot = 'none')
-
-
-# bullshitters
-bser_efa_true <- fa(bser_true_cis_sorted[, 5:18],
-                    nfactors = 3,
-                    fm = 'ml',
-                    max.iter = 500,
-                    rotate = 'varimax')
-bser_efa_true
-fa.diagram(bser_efa_true)
-
-bser_efa_anti <- fa(bser_anti_cis_sorted[, 5:18],
-                    nfactors = 3,
-                    fm = 'ml',
-                    max.iter = 500,
-                    rotate = 'varimax')
-bser_efa_anti
-fa.diagram(bser_efa_anti)
+# # do this for the separate CI categories
+# bser_true_cis_sorted <- full_df %>%
+#   filter(ci_type == 'bullshitter' & img_cat == 'trueCI') %>%
+#   arrange(trustworthy,
+#           attractive,
+#           wise,
+#           gullible,
+#           dominant,
+#           sociable,
+#           ambitious,
+#           deceptive,
+#           narcissistic,
+#           competent,
+#           warm,
+#           eurocentric,
+#           masculine)
 # 
-# # create a dataframe from these scores to use in subsequent studies
-# scores1 <- data.frame(
-#   stimID = bser_true_cis_sorted$stimID,
-#   social_competence = bser_efa_true$scores[, 1],
-#   strategic_charisma = bser_efa_true$scores[, 2],
-#   youthfulness = bser_efa_true$scores[, 3],
-#   target_category = 'bullshitter',
-#   ci_type = 'trueCI'
-# )
+# bser_anti_cis_sorted <- full_df %>%
+#   filter(ci_type == 'bullshitter' & img_cat == 'antiCI') %>%
+#   arrange(trustworthy,
+#           attractive,
+#           wise,
+#           gullible,
+#           dominant,
+#           sociable,
+#           ambitious,
+#           deceptive,
+#           narcissistic,
+#           competent,
+#           warm,
+#           eurocentric,
+#           masculine)
 # 
-# scores2 <- data.frame(
-#   stimID = bser_anti_cis_sorted$stimID,
-#   social_competence = bser_efa_anti$scores[, 1],
-#   strategic_charisma = bser_efa_anti$scores[, 2],
-#   youthfulness = bser_efa_anti$scores[, 3],
-#   target_category = 'bullshitter',
-#   ci_type = 'antiCI'
-# )
+# bsee_true_cis_sorted <- full_df %>%
+#   filter(ci_type == 'bullshittee' & img_cat == 'trueCI') %>%
+#   arrange(trustworthy,
+#           attractive,
+#           wise,
+#           gullible,
+#           dominant,
+#           sociable,
+#           ambitious,
+#           deceptive,
+#           narcissistic,
+#           competent,
+#           warm,
+#           eurocentric,
+#           masculine)
 # 
-# bullshitter_factor_scores <- rbind(scores1, scores2)
-
-
-# bullshittees
-bsee_efa_true <- fa(bsee_true_cis_sorted[, 5:18],
-                    nfactors = 3,
-                    fm = 'ml',
-                    max.iter = 500,
-                    rotate = 'varimax')
-bsee_efa_true
-fa.diagram(bsee_efa_true)
-
-bsee_efa_anti <- fa(bsee_anti_cis_sorted[, 5:18],
-                    nfactors = 3,
-                    fm = 'ml',
-                    max.iter = 500,
-                    rotate = 'varimax')
-bsee_efa_anti
-fa.diagram(bsee_efa_anti)
-
-# these are very different..
+# bsee_anti_cis_sorted <- full_df %>%
+#   filter(ci_type == 'bullshittee' & img_cat == 'antiCI') %>%
+#   arrange(trustworthy,
+#           attractive,
+#           wise,
+#           gullible,
+#           dominant,
+#           sociable,
+#           ambitious,
+#           deceptive,
+#           narcissistic,
+#           competent,
+#           warm,
+#           eurocentric,
+#           masculine)
+# 
+# 
+# # measuring factorability
+# KMO(r = cor(bser_true_cis_sorted[,5:18]))
+# KMO(r = cor(bsee_true_cis_sorted[,5:18]))
+# 
+# cortest.bartlett(bser_true_cis_sorted[,5:18])
+# cortest.bartlett(bsee_true_cis_sorted[,5:18])
+# 
+# det(cor(bser_true_cis_sorted[,5:18]))
+# det(cor(bsee_true_cis_sorted[,5:18]))
+# 
+# get_n_factors(df = bser_true_cis_sorted[,5:18],
+#               sub_val = 2,
+#               rot = 'none')
+# 
+# get_n_factors(df = bser_anti_cis_sorted[,5:18],
+#               sub_val = 2,
+#               rot = 'none')
+# 
+# get_n_factors(df = bsee_true_cis_sorted[,5:18],
+#               sub_val = 2,
+#               rot = 'none')
+# 
+# get_n_factors(df = bsee_anti_cis_sorted[,5:18],
+#               sub_val = 2,
+#               rot = 'none')
+# 
+# 
+# # bullshitters
+# bser_efa_true <- fa(bser_true_cis_sorted[, 5:18],
+#                     nfactors = 3,
+#                     fm = 'ml',
+#                     max.iter = 500,
+#                     rotate = 'varimax')
+# bser_efa_true
+# fa.diagram(bser_efa_true)
+# 
+# bser_efa_anti <- fa(bser_anti_cis_sorted[, 5:18],
+#                     nfactors = 3,
+#                     fm = 'ml',
+#                     max.iter = 500,
+#                     rotate = 'varimax')
+# bser_efa_anti
+# fa.diagram(bser_efa_anti)
+# # 
+# # # create a dataframe from these scores to use in subsequent studies
+# # scores1 <- data.frame(
+# #   stimID = bser_true_cis_sorted$stimID,
+# #   social_competence = bser_efa_true$scores[, 1],
+# #   strategic_charisma = bser_efa_true$scores[, 2],
+# #   youthfulness = bser_efa_true$scores[, 3],
+# #   target_category = 'bullshitter',
+# #   ci_type = 'trueCI'
+# # )
+# # 
+# # scores2 <- data.frame(
+# #   stimID = bser_anti_cis_sorted$stimID,
+# #   social_competence = bser_efa_anti$scores[, 1],
+# #   strategic_charisma = bser_efa_anti$scores[, 2],
+# #   youthfulness = bser_efa_anti$scores[, 3],
+# #   target_category = 'bullshitter',
+# #   ci_type = 'antiCI'
+# # )
+# # 
+# # bullshitter_factor_scores <- rbind(scores1, scores2)
+# 
+# 
+# # bullshittees
+# bsee_efa_true <- fa(bsee_true_cis_sorted[, 5:18],
+#                     nfactors = 3,
+#                     fm = 'ml',
+#                     max.iter = 500,
+#                     rotate = 'varimax')
+# bsee_efa_true
+# fa.diagram(bsee_efa_true)
+# 
+# bsee_efa_anti <- fa(bsee_anti_cis_sorted[, 5:18],
+#                     nfactors = 3,
+#                     fm = 'ml',
+#                     max.iter = 500,
+#                     rotate = 'varimax')
+# bsee_efa_anti
+# fa.diagram(bsee_efa_anti)
+# 
+# # these are very different..
 
 
 
